@@ -3,8 +3,9 @@
 
 # <codecell>
 
-import time,json
+import time, json
 from os import path
+
 
 def computeMetrics(conf):
     '''
@@ -35,26 +36,25 @@ def computeMetrics(conf):
                 '#'.join([str(v) for k, v in conf['algo']['props'].iteritems() if not k.startswith('libFM')])
     confPath = path.join(splitPath, 'Rec', algo_conf)
     recPath = path.join(confPath, "recommendations")
-    #recPath = splitPath+"/Rec/"+ conf['algo']['name']+"/recommendations/"
+    # recPath = splitPath+"/Rec/"+ conf['algo']['name']+"/recommendations/"
 
     gtRDD = sc.textFile(GTpath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)
     recRDD = sc.textFile(recPath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)
 
-
     recommendationRDD = recRDD \
-        .flatMap(lambda x: ([(x['id'], (k['id'],k['rank'],x)) for k in x['linkedinfo']['response']]))
+        .flatMap(lambda x: ([(x['id'], (k['id'], k['rank'], x)) for k in x['linkedinfo']['response']]))
 
     groundTruthRDD = gtRDD \
-        .flatMap(lambda x: ([(x['linkedinfo']['gt'][0]['id'], (k['id'],x)) for k in x['linkedinfo']['objects']]))
+        .flatMap(lambda x: ([(x['linkedinfo']['gt'][0]['id'], (k['id'], x)) for k in x['linkedinfo']['objects']]))
 
     hitRDDPart = recommendationRDD.join(groundTruthRDD).filter(lambda x: x[1][0][0] == x[1][1][0])
-    hitRDDPart.map(lambda x: {"type": "linebyline", "id":-1, "ts":-1, "linkedinfo":
-        {"recom": x[1][0][2],"GT": x[1][1][1]}}).map(lambda x: json.dumps(x)) \
-        .repartition(10)\
+    hitRDDPart.map(lambda x: {"type": "linebyline", "id": -1, "ts": -1, "linkedinfo":
+        {"recom": x[1][0][2], "GT": x[1][1][1]}}).map(lambda x: json.dumps(x)) \
+        .repartition(10) \
         .saveAsTextFile(path.join(confPath, conf['evaluation']['name'], "lineByLine"))
-    #.saveAsTextFile(path.join(confPath, "lineByLine"))
+    # .saveAsTextFile(path.join(confPath, "lineByLine"))
 
-    hitRDD = hitRDDPart.map(lambda x: (x[0],x[1][0][1],1.0)).persist(StorageLevel.MEMORY_AND_DISK)
+    hitRDD = hitRDDPart.map(lambda x: (x[0], x[1][0][1], 1.0)).persist(StorageLevel.MEMORY_AND_DISK)
     '''
     {"type": "metric", "id": -1, "ts" : -1, "properties": {"name": "recall@20" ,"value": 0.25}, 
     "linkedinfo":{"subjects":[], "objects" : [] }}
@@ -71,7 +71,7 @@ def computeMetrics(conf):
         temp['properties']['name'] = conf['evaluation']['name']
         temp['evaluation'] = {}
         temp['evaluation']['N'] = n
-        temp['evaluation']['value'] = hitRDD.filter(lambda x: x[1] <n).map(lambda x: x[2]).sum()/totRec
+        temp['evaluation']['value'] = hitRDD.filter(lambda x: x[1] < n).map(lambda x: x[2]).sum() / totRec
         temp['linkedinfo'] = {}
         temp['linkedinfo']['subjects'] = []
         temp['linkedinfo']['subjects'].append({})
