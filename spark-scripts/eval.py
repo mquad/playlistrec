@@ -8,23 +8,6 @@ from os import path
 
 
 def computeMetrics(conf):
-    '''
-    conf = {}
-    conf['evaluation'] = {}
-    conf['evaluation']['metric'] = {}
-    conf['evaluation']['metric']['type'] = 'recall'
-    conf['evaluation']['metric']['prop'] = {}
-    conf['evaluation']['metric']['prop']['N'] = [1,2,5,10,15,20,25,50,100]
-    conf['evaluation']['name'] = 'recall@N'
-    conf['split'] = {}
-    conf['split']['name'] = 'mieProve000'
-    conf['general'] = {}
-    conf['general']['clientname'] = "split"
-    conf['general']['bucketName'] = 'contentwise-research-poli'
-    conf['algo'] = {}
-    conf['algo']['name'] = 'GHTraining'
-    '''
-
     basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
     # basePath = "s3n://" + conf['general']['bucketName'] + "/"+conf['general']['clientname']+"/"
     splitPath = path.join(basePath, conf['split']['name'])
@@ -33,7 +16,7 @@ def computeMetrics(conf):
     # GTpath = splitPath+"GT"
 
     algo_conf = conf['algo']['name'] + '_' + \
-                '#'.join([str(v) for k, v in conf['algo']['props'].iteritems() if not k.startswith('libFM')])
+        '#'.join([str(v) for k, v in conf['algo']['props'].iteritems() if not k.startswith('libFM')])
     confPath = path.join(splitPath, 'Rec', algo_conf)
     recPath = path.join(confPath, "recommendations")
     # recPath = splitPath+"/Rec/"+ conf['algo']['name']+"/recommendations/"
