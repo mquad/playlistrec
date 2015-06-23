@@ -62,6 +62,9 @@ def computeMetrics(conf):
         temp['linkedinfo']['subjects'][0]['algoName'] = conf['algo']['name']
         result.append(temp)
     metricsPath = path.join(confPath, conf['evaluation']['name'], "metrics")
-    sc.parallelize(result).map(lambda x: json.dumps(x)) \
-        .saveAsTextFile(metricsPath)
+    (sc
+     .parallelize(result)
+     .map(lambda x: json.dumps(x))
+     .repartition(1)
+     .saveAsTextFile(metricsPath))
     print "%s successfully written to %s" % (conf['evaluation']['name'], metricsPath)
