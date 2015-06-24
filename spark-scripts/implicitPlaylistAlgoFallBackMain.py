@@ -32,7 +32,26 @@ def joinRecommendations(recAlgoMain,recAlgoFallBack,config):
     return json.dumps(finalRecomm)
 
 
-def executeImplicitPlaylistAlgoFallBack(playlists, test, config):
+def computeSAGHFallback(conf):
+    saghConf = copy.deepcopy(conf)
+    saghConf['algo']['name'] = saghConf['algo']['props']['fallbackAlgoName']
+    saghConf['algo']['props'] = copy.deepcopy(conf['algo']['props']['fallbackAlgoProps'])
+
+    artistLookupRDD = loadArtistLookup(saghConf)
+    artistLookupRDD.cache()
+
+    batchTrainingRDD = (train
+                    .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
+                                                                  saghConf['algo']['props']['skipTh'])
+                    .map(lambda x: (int(x[0]), int(x[2])))
+                    .cache())
+    recReqRDD = parseRequests(artistLookupRDD, test, saghConf['algo']['props']['skipTh'], saghConf).cache()
+    predictedTracksFallBack = generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, test,
+                                             saghConf['algo']['props']['numGH'], saghConf)
+    return predictedTracksFallBack
+
+
+def executeImplicitPlaylistAlgoFallBack(playlists, predictedTracksFallBack, test, config):
     sessionTrackRDD = test.flatMap(lambda line: decay(line, config["algo"]["props"]["expDecayFactor"]))
     predictedPlaylistRDD = matmul_join(sessionTrackRDD, playlists)
     # se io non ho una track nelle mie playlist implicite mi perdo roba
@@ -49,24 +68,6 @@ def executeImplicitPlaylistAlgoFallBack(playlists, test, config):
         predictedTracks = predictedTraksWithProfile.map(
             lambda x: (x[0], bestTracks(x[1][1], [], config["split"]["reclistSize"])))
     predictedTracksImplicit = predictedTracks.map(lambda x: recToJson(x))
-
-    if conf['algo']['props']['fallbackAlgoName'] == 'SAGH':
-        saghConf = copy.deepcopy(conf)
-        saghConf['algo']['name'] = saghConf['algo']['props']['fallbackAlgoName']
-        saghConf['algo']['props'] = copy.deepcopy(conf['algo']['props']['fallbackAlgoProps'])
-
-        artistLookupRDD = loadArtistLookup(saghConf)
-        artistLookupRDD.cache()
-
-        batchTrainingRDD = (train
-                        .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
-                                                                      saghConf['algo']['props']['skipTh'])
-                        .map(lambda x: (int(x[0]), int(x[2])))
-                        .cache())
-        recReqRDD = parseRequests(artistLookupRDD, test, saghConf['algo']['props']['skipTh'], saghConf).cache()
-        predictedTracksFallBack = generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, test,
-                                                 saghConf['algo']['props']['numGH'], saghConf)
-
     predictedTracksImplicitToBeJoined = predictedTracksImplicit.map(lambda x: (int(json.loads(x)["id"]),x))
     predictedTracksFallBackToBeJoined = predictedTracksFallBack.map(lambda x: (int(json.loads(x)["id"]),x))
     return predictedTracksImplicitToBeJoined.join(predictedTracksFallBackToBeJoined).map(lambda x: joinRecommendations(x[1][0],x[1][1],conf))
