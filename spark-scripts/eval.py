@@ -4,6 +4,7 @@
 # <codecell>
 
 import time, json
+import re
 from os import path
 
 
@@ -17,6 +18,8 @@ def computeMetrics(conf):
 
     algo_conf = conf['algo']['name'] + '_' + \
         '#'.join([str(v) for k, v in conf['algo']['props'].iteritems() if not k.startswith('libFM')])
+    algo_conf = re.sub(r'[^A-Za-z0-9#]', '', algo_conf)
+
     confPath = path.join(splitPath, 'Rec', algo_conf)
     recPath = path.join(confPath, "recommendations")
     # recPath = splitPath+"/Rec/"+ conf['algo']['name']+"/recommendations/"
