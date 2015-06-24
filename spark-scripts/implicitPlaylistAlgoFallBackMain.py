@@ -32,7 +32,7 @@ def joinRecommendations(recAlgoMain,recAlgoFallBack,config):
     return json.dumps(finalRecomm)
 
 
-def computeSAGHFallback(conf):
+def computeSAGHFallback(train, test, conf):
     saghConf = copy.deepcopy(conf)
     saghConf['algo']['name'] = saghConf['algo']['props']['fallbackAlgoName']
     saghConf['algo']['props'] = copy.deepcopy(conf['algo']['props']['fallbackAlgoProps'])
