@@ -17,7 +17,7 @@ def formatResponse(rank_list, response_size=100):
 def loadArtistLookup(conf):
     basePath = path.join('s3n://', conf['general']['bucketName'])
     trackPath = path.join(basePath, conf['general']['tracksPath'])
-    trackRDD = sc.textFile(trackPath).cache()
+    trackRDD = sc.textFile(trackPath)
     tabSplit = lambda x: x.split("\t")
     ext = lambda x: (int(x[1]), int(readJson(x)[0]['id']))
     artistLookupRDD = (trackRDD
