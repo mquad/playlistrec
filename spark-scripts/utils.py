@@ -2,6 +2,7 @@ __author__ = 'robertopagano'
 
 import json
 import boto
+import re
 from os import path
 '''
 Matrix multiplication, similarity and kNN utility functions
@@ -45,7 +46,9 @@ def saveRecommendations(conf, recJsonRdd, overwrite=False):
     s3 = boto.connect_s3()
     mybucket = s3.get_bucket(conf['general']['bucketName'])
     algo_conf = conf['algo']['name'] + '_' + \
-                '#'.join([str(v) for k, v in conf['algo']['props'].iteritems() if not k.startswith('libFM')])
+                '#'.join([str(v) for k, v in conf['algo']['props'].iteritems()])
+    algo_conf = re.sub(r'[^A-Za-z0-9#]', '', algo_conf)
+
     base_path = path.join(conf['general']['clientname'], conf['split']["name"], 'Rec', algo_conf)
     rec_key = path.join(base_path, 'recommendations_$folder$')
     key = mybucket.get_key(rec_key)
