@@ -1,12 +1,14 @@
 __author__ = 'robertopagano'
 
+
 def extractImplicitPlaylists(train, config):
     validSessions = getValidSessionIds(train, config["algo"]["props"]["sessionJaccardShrinkage"],
-                                   config["algo"]["props"]["clusterSimilarityThreshold"])
+                                       config["algo"]["props"]["clusterSimilarityThreshold"])
     playlists = getImplicitPlaylists(train, validSessions)
     return playlists
 
-def joinRecommendations(recAlgoMain,recAlgoFallBack,config):
+
+def joinRecommendations(recAlgoMain, recAlgoFallBack, config):
     recAlgoMainDict = json.loads(recAlgoMain)
     recAlgoFallBackDict = json.loads(recAlgoFallBack)
     finalRecomm = copy.deepcopy(recAlgoMainDict)
@@ -38,17 +40,31 @@ def computeSAGHFallback(train, test, conf):
     saghConf['algo']['props'] = copy.deepcopy(conf['algo']['props']['fallbackAlgoProps'])
 
     artistLookupRDD = loadArtistLookup(saghConf)
-    artistLookupRDD.cache()
 
     batchTrainingRDD = (train
-                    .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
-                                                                  saghConf['algo']['props']['skipTh'])
-                    .map(lambda x: (int(x[0]), int(x[2])))
-                    .cache())
+                        .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
+                                                                                saghConf['algo']['props']['skipTh'])
+                        .map(lambda x: (int(x[0]), int(x[2]))))
     recReqRDD = parseRequests(artistLookupRDD, test, saghConf['algo']['props']['skipTh'], saghConf).cache()
     predictedTracksFallBack = generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, test,
-                                             saghConf['algo']['props']['numGH'], saghConf)
+                                                          saghConf['algo']['props']['numGH'], saghConf)
     return predictedTracksFallBack
+
+
+def computeCAGHFallback(train, test, conf):
+    caghConf = copy.deepcopy(conf)
+    caghConf['algo']['name'] = conf['algo']['props']['fallbackAlgoName']
+    caghConf['algo']['props'] = copy.deepcopy(conf['algo']['props']['fallbackAlgoProps'])
+
+    artistLookupRDD = loadArtistLookup(saghConf)
+    batchTrainingRDD = (train
+                        .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
+                                                                                saghConf['algo']['props']['skipTh'])
+                        .map(lambda x: (int(x[0]), int(x[2]))))
+    recReqRDD = parseRequests(artistLookupRDD, test, th, conf)
+    artistArtistSim = computeArtistArtistSimMat(artistLookupRDD, batchTrainingRDD)
+    artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, conf)
+    return generateRecommendationsCAGH(artistArtistSim, artistGreatistHitsRDD, recReqRDD, test, conf)
 
 
 def executeImplicitPlaylistAlgoFallBack(playlists, predictedTracksFallBack, test, config):
@@ -68,6 +84,7 @@ def executeImplicitPlaylistAlgoFallBack(playlists, predictedTracksFallBack, test
         predictedTracks = predictedTraksWithProfile.map(
             lambda x: (x[0], bestTracks(x[1][1], [], config["split"]["reclistSize"])))
     predictedTracksImplicit = predictedTracks.map(lambda x: recToJson(x))
-    predictedTracksImplicitToBeJoined = predictedTracksImplicit.map(lambda x: (int(json.loads(x)["id"]),x))
-    predictedTracksFallBackToBeJoined = predictedTracksFallBack.map(lambda x: (int(json.loads(x)["id"]),x))
-    return predictedTracksImplicitToBeJoined.join(predictedTracksFallBackToBeJoined).map(lambda x: joinRecommendations(x[1][0],x[1][1],conf))
+    predictedTracksImplicitToBeJoined = predictedTracksImplicit.map(lambda x: (int(json.loads(x)["id"]), x))
+    predictedTracksFallBackToBeJoined = predictedTracksFallBack.map(lambda x: (int(json.loads(x)["id"]), x))
+    return predictedTracksImplicitToBeJoined.join(predictedTracksFallBackToBeJoined).map(
+        lambda x: joinRecommendations(x[1][0], x[1][1], conf))

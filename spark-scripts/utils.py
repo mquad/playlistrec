@@ -9,12 +9,13 @@ Matrix multiplication, similarity and kNN utility functions
 '''
 
 # rdd1,rdd2 in the form ((row_idx, col_idx), value)
+# computes the matrix-matrix product RDD1 * RDD2^t
 def matmul_join(rdd1, rdd2):
     rdd1mult = rdd1.map(lambda x: (x[0][1], (x[0][0], x[1])))
     rdd2mult = rdd2.map(lambda x: (x[0][1], (x[0][0], x[1])))
     return rdd1mult.join(rdd2mult) \
         .map(lambda x: ((x[1][0][0], x[1][1][0]), x[1][0][1] * x[1][1][1])) \
-        .reduceByKey(lambda x,y:x+y)
+        .reduceByKey(lambda x, y: x+y)
 
 '''
 Load/Save utility functions
@@ -48,7 +49,6 @@ def saveRecommendations(conf, recJsonRdd, overwrite=False):
     algo_conf = conf['algo']['name'] + '_' + \
                 '#'.join([str(v) for k, v in conf['algo']['props'].iteritems()])
     algo_conf = re.sub(r'[^A-Za-z0-9#_]', '', algo_conf)
-
     base_path = path.join(conf['general']['clientname'], conf['split']["name"], 'Rec', algo_conf)
     rec_key = path.join(base_path, 'recommendations_$folder$')
     key = mybucket.get_key(rec_key)

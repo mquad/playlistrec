@@ -17,7 +17,7 @@ def computeMetrics_bck(conf):
     # GTpath = splitPath+"GT"
 
     algo_conf = conf['algo']['name'] + '_' + \
-        '#'.join([str(v) for k, v in conf['algo']['props'].iteritems() if not k.startswith('libFM')])
+                '#'.join([str(v) for k, v in conf['algo']['props'].iteritems()])
     algo_conf = re.sub(r'[^A-Za-z0-9#_]', '', algo_conf)
 
     confPath = path.join(splitPath, 'Rec', algo_conf)
@@ -71,8 +71,8 @@ def computeMetrics_bck(conf):
      .repartition(1)
      .saveAsTextFile(metricsPath))
     print "%s successfully written to %s" % (conf['evaluation']['name'], metricsPath)
-    
-    
+
+
 def computeMetrics(conf):
     basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
     # basePath = "s3n://" + conf['general']['bucketName'] + "/"+conf['general']['clientname']+"/"
@@ -82,7 +82,7 @@ def computeMetrics(conf):
     # GTpath = splitPath+"GT"
 
     algo_conf = conf['algo']['name'] + '_' + \
-        '#'.join([str(v) for k, v in conf['algo']['props'].iteritems() if not k.startswith('libFM')])
+                '#'.join([str(v) for k, v in conf['algo']['props'].iteritems()])
     algo_conf = re.sub(r'[^A-Za-z0-9#_]', '', algo_conf)
 
     confPath = path.join(splitPath, 'Rec', algo_conf)
@@ -90,16 +90,18 @@ def computeMetrics(conf):
     # recPath = splitPath+"/Rec/"+ conf['algo']['name']+"/recommendations/"
 
     gtRDD = sc.textFile(GTpath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)
-    recRDD = sc.textFile(recPath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)   
-    recommendationRDD = recRDD\
-        .flatMap(lambda x: ([(x['id'], (k['id'],k['rank'])) for k in x['linkedinfo']['response']]))
+    recRDD = sc.textFile(recPath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)
+    recommendationRDD = recRDD \
+        .flatMap(lambda x: ([(x['id'], (k['id'], k['rank'])) for k in x['linkedinfo']['response']]))
+
     result = []
-    for k in [1,2,5,10]:
-        groundTruthRDD = gtRDD.filter(lambda x: len(x['linkedinfo']['objects']) > = k)\
-            .map(lambda x: ([(x['linkedinfo']['gt'][0]['id'], 
-                                  (x['linkedinfo']['objects'][k]['id'],k)) for k in range(len(x['linkedinfo']['objects']))]))
+    for k in [conf['split']['GTlength']]:
+        groundTruthRDD = gtRDD.filter(lambda x: len(x['linkedinfo']['objects']) >= k) \
+            .map(lambda x: ([(x['linkedinfo']['gt'][0]['id'],
+                              (x['linkedinfo']['objects'][k]['id'], k)) for k in
+                             range(len(x['linkedinfo']['objects']))]))
         hitRDDPart = recommendationRDD.join(groundTruthRDD).filter(lambda x: x[1][0][0] == x[1][1][0])
-        hitRDD = hitRDDPart.map(lambda x: (x[0],x[1][0][1],1.0,x[1][1][1])).persist(StorageLevel.MEMORY_AND_DISK)
+        hitRDD = hitRDDPart.map(lambda x: (x[0], x[1][0][1], 1.0, x[1][1][1])).persist(StorageLevel.MEMORY_AND_DISK)
         totRec = float(groundTruthRDD.count())
         ## recall@N
         for n in conf['evaluation']['metric']['prop']['N']:
@@ -108,10 +110,11 @@ def computeMetrics(conf):
             temp['id'] = -1
             temp['ts'] = time.time()
             temp['properties'] = {}
-            temp['properties']['name'] = conf['evaluation']['name']+"@"+str(k)
+            temp['properties']['name'] = conf['evaluation']['name'] + "@" + str(k)
             temp['evaluation'] = {}
             temp['evaluation']['N'] = n
-            temp['evaluation']['value'] = hitRDD.filter(lambda x: x[1] <n and x[3] <=k).map(lambda x: x[2]).sum()/totRec
+            temp['evaluation']['value'] = hitRDD.filter(lambda x: x[1] < n and x[3] <= k).map(
+                lambda x: x[2]).sum() / totRec
             temp['linkedinfo'] = {}
             temp['linkedinfo']['subjects'] = []
             temp['linkedinfo']['subjects'].append({})

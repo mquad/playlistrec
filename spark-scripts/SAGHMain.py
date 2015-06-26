@@ -32,11 +32,11 @@ def parseRequests(artistLookupRDD, test, th, conf):
     recReqRDD = (test
                  .flatMap(lambda x: ext2(json.loads(x)))
                  .filter(lambda x: x[2] > th)
-                 .map(lambda x: (x[1], x[0]))
-                 .join(artistLookupRDD)
-                 .map(lambda x: ((x[1][1], x[1][0]), [(x[0])]))
-                 .reduceByKey(add)
-                 .map(lambda x: (x[0][0], (x[0][1], x[1]))))
+                 .map(lambda x: (x[1], x[0]))                       #(track_id, req_id)
+                 .join(artistLookupRDD)                             #(track_id, (req_id, artist_id))
+                 .map(lambda x: ((x[1][1], x[1][0]), [(x[0])]))     #((artist_id, req_id), [track_id])
+                 .reduceByKey(add)                                  #((artist_id, req_id), list:[track_id])
+                 .map(lambda x: (x[0][0], (x[0][1], x[1]))))        #(artist_id, (req_id, list:[tracks_id]))
     return recReqRDD
 
 
@@ -52,7 +52,7 @@ def generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, te
                              .filter(uni)
                              .map(prep)
                              .reduceByKey(add)
-                             .map(sort))
+                             .map(sort))                #(artist_id, list:[(track_id, count)])
     joinedRec = recReqRDD.join(artistGreatistHitsRDD)
     recLength = conf['split']['reclistSize']
     s = lambda x: (x[0], sorter(x[1], recLength))
