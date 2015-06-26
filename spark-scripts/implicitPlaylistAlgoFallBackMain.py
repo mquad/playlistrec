@@ -45,7 +45,7 @@ def computeSAGHFallback(train, test, conf):
                         .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
                                                                                 saghConf['algo']['props']['skipTh'])
                         .map(lambda x: (int(x[0]), int(x[2]))))
-    recReqRDD = parseRequests(artistLookupRDD, test, saghConf['algo']['props']['skipTh'], saghConf).cache()
+    recReqRDD = parseRequests(artistLookupRDD, test, saghConf['algo']['props']['skipTh'], saghConf)
     predictedTracksFallBack = generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, test,
                                                           saghConf['algo']['props']['numGH'], saghConf)
     return predictedTracksFallBack
@@ -56,15 +56,15 @@ def computeCAGHFallback(train, test, conf):
     caghConf['algo']['name'] = conf['algo']['props']['fallbackAlgoName']
     caghConf['algo']['props'] = copy.deepcopy(conf['algo']['props']['fallbackAlgoProps'])
 
-    artistLookupRDD = loadArtistLookup(saghConf)
+    artistLookupRDD = loadArtistLookup(caghConf)
     batchTrainingRDD = (train
                         .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
-                                                                                saghConf['algo']['props']['skipTh'])
+                                                                                caghConf['algo']['props']['skipTh'])
                         .map(lambda x: (int(x[0]), int(x[2]))))
-    recReqRDD = parseRequests(artistLookupRDD, test, th, conf)
+    recReqRDD = parseRequests(artistLookupRDD, test, th, caghConf)
     artistArtistSim = computeArtistArtistSimMat(artistLookupRDD, batchTrainingRDD)
-    artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, conf)
-    return generateRecommendationsCAGH(artistArtistSim, artistGreatistHitsRDD, recReqRDD, test, conf)
+    artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, caghConf)
+    return generateRecommendationsCAGH(artistArtistSim, artistGreatistHitsRDD, recReqRDD, test, caghConf)
 
 
 def executeImplicitPlaylistAlgoFallBack(playlists, predictedTracksFallBack, test, config):
