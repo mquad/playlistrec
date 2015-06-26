@@ -8,7 +8,7 @@ import re
 from os import path
 
 
-def computeMetrics_bck(conf):
+def computeMetrics(conf):
     basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
     # basePath = "s3n://" + conf['general']['bucketName'] + "/"+conf['general']['clientname']+"/"
     splitPath = path.join(basePath, conf['split']['name'])
@@ -73,7 +73,7 @@ def computeMetrics_bck(conf):
     print "%s successfully written to %s" % (conf['evaluation']['name'], metricsPath)
 
 
-def computeMetrics(conf):
+def computeMetrics_new_to_test(conf):
     basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
     # basePath = "s3n://" + conf['general']['bucketName'] + "/"+conf['general']['clientname']+"/"
     splitPath = path.join(basePath, conf['split']['name'])
