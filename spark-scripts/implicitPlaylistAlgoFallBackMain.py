@@ -9,6 +9,8 @@ def extractImplicitPlaylists(train, config):
 
 
 def joinRecommendations(recAlgoMain, recAlgoFallBack, config):
+    if recAlgoFallBack is None:
+        return recAlgoMain
     recAlgoMainDict = json.loads(recAlgoMain)
     recAlgoFallBackDict = json.loads(recAlgoFallBack)
     finalRecomm = copy.deepcopy(recAlgoMainDict)
@@ -55,11 +57,11 @@ def computeCAGHFallback(train, test, conf):
     caghConf = copy.deepcopy(conf)
     caghConf['algo']['name'] = conf['algo']['props']['fallbackAlgoName']
     caghConf['algo']['props'] = copy.deepcopy(conf['algo']['props']['fallbackAlgoProps'])
+    th = caghConf['algo']['props']['skipTh']
 
     artistLookupRDD = loadArtistLookup(caghConf)
     batchTrainingRDD = (train
-                        .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] >
-                                                                                caghConf['algo']['props']['skipTh'])
+                        .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] > th)
                         .map(lambda x: (int(x[0]), int(x[2]))))
     recReqRDD = parseRequests(artistLookupRDD, test, th, caghConf)
     artistArtistSim = computeArtistArtistSimMat(artistLookupRDD, batchTrainingRDD)
@@ -86,5 +88,5 @@ def executeImplicitPlaylistAlgoFallBack(playlists, predictedTracksFallBack, test
     predictedTracksImplicit = predictedTracks.map(lambda x: recToJson(x))
     predictedTracksImplicitToBeJoined = predictedTracksImplicit.map(lambda x: (int(json.loads(x)["id"]), x))
     predictedTracksFallBackToBeJoined = predictedTracksFallBack.map(lambda x: (int(json.loads(x)["id"]), x))
-    return predictedTracksImplicitToBeJoined.join(predictedTracksFallBackToBeJoined).map(
+    return predictedTracksImplicitToBeJoined.leftOuterJoin(predictedTracksFallBackToBeJoined).map(
         lambda x: joinRecommendations(x[1][0], x[1][1], conf))
