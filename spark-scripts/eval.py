@@ -90,23 +90,17 @@ def computeMetrics(conf):
     # recPath = splitPath+"/Rec/"+ conf['algo']['name']+"/recommendations/"
 
     gtRDD = sc.textFile(GTpath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)
-    recRDD = sc.textFile(recPath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)
-
-    recommendationRDD = recRDD \
-        .flatMap(lambda x: ([(x['id'], (k['id'], k['rank'], x)) for k in x['linkedinfo']['response']]))
-
-    groundTruthRDD = gtRDD \
-        .flatMap(lambda x: ([(x['linkedinfo']['gt'][0]['id'], (k['id'], x)) for k in x['linkedinfo']['objects']]))
-
-    groundTruthRDD = gtRDD.filter(lambda x: len(x['linkedinfo']['objects']) > = k)\
-            .map(lambda x: ([(x['linkedinfo']['gt'][0]['id'], 
-                              (x['linkedinfo']['objects'][k]['id'],k)) for k in range(len(x['linkedinfo']['objects']))]))
-    hitRDDPart = recommendationRDD.join(groundTruthRDD).filter(lambda x: x[1][0][0] == x[1][1][0])
-    hitRDD = hitRDDPart.map(lambda x: (x[0],x[1][0][1],1.0,x[1][1][1])).persist(StorageLevel.MEMORY_AND_DISK)
+    recRDD = sc.textFile(recPath).map(lambda x: json.loads(x)).persist(StorageLevel.MEMORY_AND_DISK)   
+    recommendationRDD = recRDD\
+        .flatMap(lambda x: ([(x['id'], (k['id'],k['rank'])) for k in x['linkedinfo']['response']]))
     result = []
-    
     for k in [1,2,5,10]:
-        totRec = float(groundTruthRDD.filter(lambda x: x[1][1]<=k).count())
+        groundTruthRDD = gtRDD.filter(lambda x: len(x['linkedinfo']['objects']) > = k)\
+            .map(lambda x: ([(x['linkedinfo']['gt'][0]['id'], 
+                                  (x['linkedinfo']['objects'][k]['id'],k)) for k in range(len(x['linkedinfo']['objects']))]))
+        hitRDDPart = recommendationRDD.join(groundTruthRDD).filter(lambda x: x[1][0][0] == x[1][1][0])
+        hitRDD = hitRDDPart.map(lambda x: (x[0],x[1][0][1],1.0,x[1][1][1])).persist(StorageLevel.MEMORY_AND_DISK)
+        totRec = float(groundTruthRDD.count())
         ## recall@N
         for n in conf['evaluation']['metric']['prop']['N']:
             temp = {}
