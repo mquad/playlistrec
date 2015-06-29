@@ -8,14 +8,6 @@ import json
 import boto
 from os import path
 
-SPLIT = 'split'
-GENERAL = 'general'
-OUT = 'out'
-LOCATION = 'location'
-MODE = 'mode'
-PROP = 'prop'
-
-
 def testTrainUserSplit(x, percUsTr):
     if percUsTr * 100 <= np.random.randint(0, 100): return (x, 1)
     return (x, 0)

@@ -95,7 +95,7 @@ def computeMetrics_new_to_test(conf):
         .flatMap(lambda x: ([(x['id'], (k['id'], k['rank'])) for k in x['linkedinfo']['response']]))
 
     result = []
-    for k in [conf['split']['GTlength']]:
+    for k in [1, 2, 5, 10]:
         groundTruthRDD = gtRDD.filter(lambda x: len(x['linkedinfo']['objects']) >= k) \
             .map(lambda x: ([(x['linkedinfo']['gt'][0]['id'],
                               (x['linkedinfo']['objects'][k]['id'], k)) for k in

@@ -1,7 +1,7 @@
 __author__ = 'robertopagano'
 
 
-
+execfile('../spark-scripts/conventions.py')
 execfile('../spark-scripts/split.py')
 execfile('../spark-scripts/utils.py')
 execfile('../spark-scripts/eval.py')
