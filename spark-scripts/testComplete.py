@@ -53,7 +53,7 @@ for excludeAlreadyListenedTest in [True, False]:
 
         conf['general'] = {}
         #conf['general']['clientname'] = "split22.split"
-        conf['general']['location'] = "complete.split"
+        conf['general']['clientname'] = "complete.split"
         conf['general']['bucketName'] = 'contentwise-research-poli'
         conf['general']['tracksPath'] = '30Mdataset/entities/tracks.idomaar.gz'
 
