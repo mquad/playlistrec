@@ -245,10 +245,9 @@ def splitter(conf):
         testUsersRDD = splitTestTrain.filter(lambda x: x[1] == 1)
         trainUsersRDD = splitTestTrain.filter(lambda x: x[1] == 0)
 
-        if trainUsersRDD.count() > 0:
-            readDataset2.filter(lambda x: len(x[1]['linkedinfo']['objects']) >= minEventPerSessionTraining) \
-                .join(trainUsersRDD).map(lambda x: json.dumps(x[1][0])) \
-                .saveAsTextFile(pathOUT + "train/batchTraining/")
+        readDataset2.filter(lambda x: len(x[1]['linkedinfo']['objects']) >= minEventPerSessionTraining) \
+            .join(trainUsersRDD).map(lambda x: json.dumps(x[1][0])) \
+            .saveAsTextFile(pathOUT + "train/batchTraining/")
         testRDD = readDataset2.filter(lambda x: len(x[1]['linkedinfo']['objects']) >= minEventPerSessionTest) \
             .join(testUsersRDD).map(lambda x: (long(x[1][0]['ts']), x[1][0]))
 
