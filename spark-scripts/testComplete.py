@@ -12,7 +12,7 @@ from os import path
 
 for excludeAlreadyListenedTest in [True, False]:
 
-    for onlinetr_len in [1, 2, 5, 10, 20]:
+    for onlinetr_len in [1]:
         # for gtlen in [5]:
 
         conf = {}
@@ -60,7 +60,7 @@ for excludeAlreadyListenedTest in [True, False]:
 
         sc = SparkContext(appName="Music")
 
-        splitter(conf)
+        #splitter(conf)
 
         train, test = loadDataset(conf)
         train.cache()
