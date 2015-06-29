@@ -8,6 +8,7 @@ import json
 import boto
 from os import path
 from pyspark import StorageLevel
+from conventions import *
 
 def testTrainUserSplit(x, percUsTr):
     if percUsTr * 100 <= np.random.randint(0, 100): return (x, 1)
@@ -242,6 +243,8 @@ def splitter(conf):
 
         testUsersRDD = splitTestTrain.filter(lambda x: x[1] == 1)
         trainUsersRDD = splitTestTrain.filter(lambda x: x[1] == 0)
+
+        print "Number of training users: %d" % trainUsersRDD.count()
 
         readDataset2.filter(lambda x: len(x[1]['linkedinfo']['objects']) >= minEventPerSessionTraining) \
             .join(trainUsersRDD).map(lambda x: json.dumps(x[1][0])) \
