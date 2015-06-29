@@ -1,12 +1,9 @@
 __author__ = 'robertopagano'
 
-
 execfile('../spark-scripts/conventions.py')
 execfile('../spark-scripts/split.py')
 execfile('../spark-scripts/utils.py')
 execfile('../spark-scripts/eval.py')
-
-
 
 import json
 import copy
@@ -15,8 +12,8 @@ from os import path
 
 for excludeAlreadyListenedTest in [True, False]:
 
-    for online_trlen in [1,2,5,10]:
-    #for gtlen in [5]:
+    for online_trlen in [1, 2, 5, 10, 20]:
+        # for gtlen in [5]:
 
         conf = {}
 
@@ -28,17 +25,17 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['split']['prop'] = {}
 
         conf['split']['minEventsPerUser'] = 5
-        #conf['split']['inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval5total_1413851857/'
-        conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions.idomaar.gz'
+        # conf['split']['inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval5total_1413851857/'
+        conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions'
         conf['split']['bucketName'] = 'contentwise-research-poli'
-        conf['split']['location'] = '30Mdataset/relations/sessions.idomaar.gz'
+        conf['split']['location'] = '30Mdataset/relations/sessions'
         conf['split']['percUsTr'] = 0
         conf['split']['ts'] = int(0.75 * (1421745857 - 1390209860) + 1390209860) - 10000
         conf['split']['minEventPerSession'] = 5
         conf['split']['onlineTrainingLength'] = online_trlen
         conf['split']['GTlength'] = 5
         conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_gt_' + str(online_trlen)
-        #conf['split']['name'] = 'SenzaRipetizioni_nuovoEval5total_1413851857'
+        # conf['split']['name'] = 'SenzaRipetizioni_nuovoEval5total_1413851857'
         conf['split']['minEventPerSessionTraining'] = 10
         conf['split']['minEventPerSessionTest'] = 11
         conf['split']['mode'] = 'total'
@@ -49,24 +46,23 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['evaluation']['metric'] = {}
         conf['evaluation']['metric']['type'] = 'recall'
         conf['evaluation']['metric']['prop'] = {}
-        conf['evaluation']['metric']['prop']['N'] = [1,2,5,10,15,20,25,50,100]
+        conf['evaluation']['metric']['prop']['N'] = [1, 2, 5, 10, 15, 20, 25, 50, 100]
         conf['evaluation']['name'] = 'recall@N'
 
         conf['general'] = {}
-        #conf['general']['clientname'] = "split22.split"
+        # conf['general']['clientname'] = "split22.split"
         conf['general']['clientname'] = "complete.split"
         conf['general']['bucketName'] = 'contentwise-research-poli'
         conf['general']['tracksPath'] = '30Mdataset/entities/tracks.idomaar.gz'
 
-        conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s' % (conf['general']['clientname'], conf['split']['name'])
-
-
+        conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s' % (
+        conf['general']['clientname'], conf['split']['name'])
 
         sc = SparkContext(appName="Music")
 
         splitter(conf)
 
-        train,test = loadDataset(conf)
+        train, test = loadDataset(conf)
         train.cache()
         test.cache()
         artistLookupRDD = loadArtistLookup(conf)
@@ -76,13 +72,12 @@ for excludeAlreadyListenedTest in [True, False]:
         execfile('../spark-scripts/CAGHFunctions.py')
         execfile('../spark-scripts/CAGHMain.py')
 
-
         conf['algo'] = {}
         conf['algo']['name'] = 'CAGH'
         conf['algo']['props'] = {}
-        #conf['algo']['props']['numGH'] = 10
-        #conf['algo']['props']['minAASim'] = 0.5
-        #conf['algo']['props']['skipTh'] = 0
+        # conf['algo']['props']['numGH'] = 10
+        # conf['algo']['props']['minAASim'] = 0.5
+        # conf['algo']['props']['skipTh'] = 0
 
 
 
@@ -110,7 +105,8 @@ for excludeAlreadyListenedTest in [True, False]:
                 artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, conf).cache()
                 for minAASim in minAASimList:
                     conf['algo']['props']['minAASim'] = minAASim
-                    recJsonRdd = generateRecommendationsCAGH(artistArtistSim, artistGreatistHitsRDD, recReqRDD, test, conf)
+                    recJsonRdd = generateRecommendationsCAGH(artistArtistSim, artistGreatistHitsRDD, recReqRDD, test,
+                                                             conf)
                     try:
                         saveRecommendations(conf, recJsonRdd, overwrite=True)
                         computeMetrics(conf)
@@ -125,8 +121,8 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['algo'] = {}
         conf['algo']['name'] = 'SAGH'
         conf['algo']['props'] = {}
-        #conf['algo']['props']['numGH'] = 100
-        #conf['algo']['props']['skipTh'] = 0
+        # conf['algo']['props']['numGH'] = 100
+        # conf['algo']['props']['skipTh'] = 0
 
 
         basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
@@ -145,7 +141,8 @@ for excludeAlreadyListenedTest in [True, False]:
 
             for numGH in numGHList:
                 conf['algo']['props']['numGH'] = numGH
-                recJsonRdd = generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, test, numGH, conf)
+                recJsonRdd = generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, test, numGH,
+                                                         conf)
                 saveRecommendations(conf, recJsonRdd, overwrite=True)
                 computeMetrics(conf)
 
@@ -158,7 +155,6 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['algo'] = {}
         conf['algo']['name'] = 'ImplicitPlaylist'
         conf['algo']['props'] = {}
-
 
         basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
         splitPath = path.join(basePath, conf['split']['name'])
@@ -178,7 +174,7 @@ for excludeAlreadyListenedTest in [True, False]:
                 for expDecay in expDecayList:
                     conf['algo']['props']["expDecayFactor"] = expDecay
                     conf['algo']['name'] = 'ImplicitPlaylist_shk_%d_clustSim_%.3f_decay_%.3f' % \
-                        (sessionJaccardShrinkage, clusterSim, expDecay )
+                                           (sessionJaccardShrinkage, clusterSim, expDecay)
 
                     recJsonRDD = executeImplicitPlaylistAlgo(playlists, test, conf)
                     try:
@@ -186,6 +182,5 @@ for excludeAlreadyListenedTest in [True, False]:
                         computeMetrics(conf)
                     except:
                         pass
-
 
         sc.stop()
