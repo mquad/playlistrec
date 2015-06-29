@@ -23,6 +23,8 @@ for online_trlen in [1,2,5,10]:
     conf['split']['callParams'] = {}
     conf['split']['excludeAlreadyListenedTest'] = True
 
+    conf['split']['prop'] = {}
+
     conf['split']['minEventsPerUser'] = 5
     #conf['split']['inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval5total_1413851857/'
     conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions.idomaar'
@@ -52,6 +54,7 @@ for online_trlen in [1,2,5,10]:
     conf['general']['bucketName'] = 'contentwise-research-poli'
     conf['general']['tracksPath'] = '30Mdataset/entities/tracks.idomaar.gz'
 
+    conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s' % (conf['general']['clientname'], conf['split']['name'])
 
 
 
