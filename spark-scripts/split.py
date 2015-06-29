@@ -205,7 +205,7 @@ def splitter(conf):
     pathOUT = conf[SPLIT][OUT]
 
     minEventsPerUser = conf['split']['minEventsPerUser'] if 'minEventsPerUser' in conf['split'] else 0
-    mode = conf[MODE]
+    mode = conf[SPLIT][MODE]
     TS = conf[SPLIT][TS_json]
 
     if conf[SPLIT]['type'] == list:
