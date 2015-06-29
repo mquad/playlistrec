@@ -39,6 +39,7 @@ for online_trlen in [1,2,5,10]:
     conf['split']['minEventPerSessionTraining'] = 10
     conf['split']['minEventPerSessionTest'] = 11
     conf['split']['mode'] = 'total'
+    conf['split']['type'] = 'file'
     conf['split']['forceSplitCreation'] = True
 
     conf['evaluation'] = {}
