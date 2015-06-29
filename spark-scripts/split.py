@@ -194,8 +194,7 @@ def splitter_bck(conf):
         else:
             recAndGt = test.map(lambda x: gt1Creator(x[1], prop, mode='ts-multi', TS=TS)) \
                 .union(test.map(lambda x: (x[1]['linkedinfo']['subjects'][0]['id'], x)) \
-                       .reduceByKey(lambda x, y: x).map(lambda x: gt1Creator(x[1][1], prop, mode='req', TS=TS))) \
- \
+                       .reduceByKey(lambda x, y: x).map(lambda x: gt1Creator(x[1][1], prop, mode='req', TS=TS)))
         recAndGt.filter(lambda x: x['type'] == 'request').map(lambda x: json.dumps(x)).repartition(16) \
             .saveAsTextFile(path + "test/onlineTraining/")
         recAndGt.filter(lambda x: x['type'] != 'request').map(lambda x: json.dumps(x)).repartition(16) \

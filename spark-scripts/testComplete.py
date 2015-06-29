@@ -13,7 +13,7 @@ import copy
 from pyspark import SparkContext
 from os import path
 
-for gtlen in [1,2,5,10]:
+for online_trlen in [1,2,5,10]:
 #for gtlen in [5]:
 
     conf = {}
@@ -30,14 +30,14 @@ for gtlen in [1,2,5,10]:
     conf['split']['percUsTr'] = 0.05
     conf['split']['ts'] = int(0.75 * (1421745857 - 1390209860) + 1390209860) - 10000
     conf['split']['minEventPerSession'] = 5
-    conf['split']['onlineTrainingLength'] = 5
-    conf['split']['GTlength'] = gtlen
-    conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_gt_' + str(gtlen)
+    conf['split']['onlineTrainingLength'] = online_trlen
+    conf['split']['GTlength'] = 5
+    conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_gt_' + str(online_trlen)
     #conf['split']['name'] = 'SenzaRipetizioni_nuovoEval5total_1413851857'
     conf['split']['minEventPerSessionTraining'] = 10
     conf['split']['minEventPerSessionTest'] = 11
-    conf['split']['mode'] = 'session'
-    conf['split']['forceSplitCreation'] = False
+    conf['split']['mode'] = 'total'
+    conf['split']['forceSplitCreation'] = True
 
     conf['evaluation'] = {}
     conf['evaluation']['metric'] = {}
