@@ -24,12 +24,14 @@ Load/Save utility functions
 def loadDataset(config):
     inFile = path.join('s3n://', config['general']['bucketName'], config['general']['clientname'], config['split']['name'])
     # trainBatch = sc.textFile(path.join(inFile, 'train/batchTraining'))
-    trainBatch = (sc
-                  .textFile(path.join(inFile, 'train/batchTraining'))
-                  .filter(lambda x: int(json.loads(x)['ts']) < config['split']['ts']))
+    # trainBatch = (sc
+    #               .textFile(path.join(inFile, 'train/batchTraining'))
+    #               .filter(lambda x: int(json.loads(x)['ts']) < config['split']['ts']))
+    # testBatch = sc.textFile(path.join(inFile, 'test/batchTraining'))
+    # testOnline = sc.textFile(path.join(inFile, 'test/onlineTraining'))
     testBatch = sc.textFile(path.join(inFile, 'test/batchTraining'))
     testOnline = sc.textFile(path.join(inFile, 'test/onlineTraining'))
-    batch = trainBatch.union(testBatch)
+    batch = testBatch
     return batch, testOnline
 
 
