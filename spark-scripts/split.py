@@ -7,6 +7,7 @@ import numpy as np
 import json
 import boto
 from os import path
+from pyspark import StorageLevel
 
 def testTrainUserSplit(x, percUsTr):
     if percUsTr * 100 <= np.random.randint(0, 100): return (x, 1)
