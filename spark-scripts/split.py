@@ -216,7 +216,7 @@ def splitter(conf):
                 RDD = RDD.union(sc.textFile(path))
 
     else:
-        RDD = sc.textFile('s3n://' + conf[BUCKET] + "/" + conf[SPLIT][LOCATION])
+        RDD = sc.textFile('s3n://' + conf[GENERAL][BUCKET] + "/" + conf[SPLIT][LOCATION])
 
     readDataset = RDD.map(lambda x: json.loads(x)) \
         .map(lambda x: (x[LINKEDINFO][SUBJECTS][0][ID], x)).persist(StorageLevel.MEMORY_AND_DISK)
