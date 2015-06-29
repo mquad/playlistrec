@@ -13,8 +13,8 @@ import copy
 from pyspark import SparkContext
 from os import path
 
-# for gtlen in [1,2,5,10]:
-for gtlen in [5]:
+for gtlen in [1,2,5,10]:
+#for gtlen in [5]:
 
     conf = {}
 
@@ -24,16 +24,16 @@ for gtlen in [5]:
     conf['split']['excludeAlreadyListenedTest'] = True
 
     conf['split']['minEventsPerUser'] = 5
-    conf['split']['inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval5total_1413851857/'
-    #conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions.idomaar'
+    #conf['split']['inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval5total_1413851857/'
+    conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions.idomaar'
     conf['split']['bucketName'] = 'contentwise-research-poli'
     conf['split']['percUsTr'] = 0.05
     conf['split']['ts'] = int(0.75 * (1421745857 - 1390209860) + 1390209860) - 10000
     conf['split']['minEventPerSession'] = 5
     conf['split']['onlineTrainingLength'] = 5
     conf['split']['GTlength'] = gtlen
-    # conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_gt_' + gtlen
-    conf['split']['name'] = 'SenzaRipetizioni_nuovoEval5total_1413851857'
+    conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_gt_' + str(gtlen)
+    #conf['split']['name'] = 'SenzaRipetizioni_nuovoEval5total_1413851857'
     conf['split']['minEventPerSessionTraining'] = 10
     conf['split']['minEventPerSessionTest'] = 11
     conf['split']['mode'] = 'session'
@@ -47,8 +47,8 @@ for gtlen in [5]:
     conf['evaluation']['name'] = 'recall@N'
 
     conf['general'] = {}
-    conf['general']['clientname'] = "split22.split"
-    # conf['general']['clientname'] = "complete.split"
+    #conf['general']['clientname'] = "split22.split"
+    conf['general']['clientname'] = "complete.split"
     conf['general']['bucketName'] = 'contentwise-research-poli'
     conf['general']['tracksPath'] = '30Mdataset/entities/tracks.idomaar.gz'
 
