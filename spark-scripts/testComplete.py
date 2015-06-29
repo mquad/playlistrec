@@ -65,12 +65,13 @@ for excludeAlreadyListenedTest in [True, False]:
         train, test = loadDataset(conf)
         train.cache()
         test.cache()
-        artistLookupRDD = loadArtistLookup(conf)
-        artistLookupRDD.cache()
 
         ####CAGH
         execfile('../spark-scripts/CAGHFunctions.py')
         execfile('../spark-scripts/CAGHMain.py')
+
+        artistLookupRDD = loadArtistLookup(conf)
+        artistLookupRDD.cache()
 
         conf['algo'] = {}
         conf['algo']['name'] = 'CAGH'
