@@ -31,6 +31,7 @@ for excludeAlreadyListenedTest in [True, False]:
         #conf['split']['inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval5total_1413851857/'
         conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions.idomaar'
         conf['split']['bucketName'] = 'contentwise-research-poli'
+        conf['split']['location'] = '30Mdataset/relations/sessions.idomaar'
         conf['split']['percUsTr'] = 0
         conf['split']['ts'] = int(0.75 * (1421745857 - 1390209860) + 1390209860) - 10000
         conf['split']['minEventPerSession'] = 5
