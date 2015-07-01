@@ -62,5 +62,5 @@ def generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, te
            map(s))
     responses = (test.map(lambda x: (int(json.loads(x)['id']), x))
                  .join(rec)
-                 .map(lambda x: addResponse(x[1][0], formatResponse(x[1][1], json.loads(x[1][0])['properties']['reclistSize']))))
+                 .map(lambda x: addResponse(x[1][0], formatResponse(x[1][1], recLength))))
     return responses

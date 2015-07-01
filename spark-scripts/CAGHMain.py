@@ -98,6 +98,6 @@ def generateRecommendationsCAGH(artistArtistSim, artistGreatistHitsRDD, recReqRD
     responses = (test.map(lambda x: (int(json.loads(x)['id']), x))
                  .join(rec)
                  .map(
-        lambda x: addResponse(x[1][0], formatResponse(x[1][1], json.loads(x[1][0])['properties']['reclistSize']))))
+        lambda x: addResponse(x[1][0], formatResponse(x[1][1], recLength))))
 
     return responses
