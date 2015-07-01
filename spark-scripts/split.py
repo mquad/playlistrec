@@ -204,10 +204,12 @@ def splitter_bck(conf):
 
 
 def splitter(conf):
+    prop = conf[SPLIT][PROP]
+    pathOUT = conf[SPLIT][OUT]
     # check for already existing splits
     s3 = boto.connect_s3()
     mybucket = s3.get_bucket(conf['general']['bucketName'])
-    split_path = os.path.join(conf['split']['split'], conf['split']['name'])
+    split_path = os.path.join(conf['general']['clientname'], conf['split']['name'])
     key = mybucket.get_key(split_path + '_$folder$')
     if key:
         if not conf['split']['forceSplitCreation']:
@@ -216,8 +218,6 @@ def splitter(conf):
         else:
             s3_delete_recursive(mybucket, split_path)
 
-    prop = conf[SPLIT][PROP]
-    pathOUT = conf[SPLIT][OUT]
 
     minEventsPerUser = conf['split']['minEventsPerUser'] if 'minEventsPerUser' in conf['split'] else 0
     mode = conf[SPLIT][MODE]
