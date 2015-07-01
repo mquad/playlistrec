@@ -34,7 +34,7 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['split']['minEventPerSession'] = 5
         conf['split']['onlineTrainingLength'] = onlinetr_len
         conf['split']['GTlength'] = 5
-        conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_plen_' + str(onlinetr_len)
+        conf['split']['name'] = 'split_complete_ts_1413851857_repetitions_%d_plen_%d' % (not excludeAlreadyListenedTest, onlinetr_len)
         # conf['split']['name'] = 'SenzaRipetizioni_nuovoEval5total_1413851857'
         conf['split']['minEventPerSessionTraining'] = 10
         conf['split']['minEventPerSessionTest'] = 11
@@ -60,7 +60,7 @@ for excludeAlreadyListenedTest in [True, False]:
 
         sc = SparkContext(appName="Music")
 
-        #splitter(conf)
+        splitter(conf)
 
         train, test = loadDataset(conf)
         train.cache()
