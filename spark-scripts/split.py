@@ -6,10 +6,9 @@
 import numpy as np
 import json
 import boto
-from os import path
+import os
 from pyspark import StorageLevel
 from conventions import *
-
 
 def testTrainUserSplit(x, percUsTr):
     if percUsTr * 100 <= np.random.randint(0, 100): return (x, 1)
@@ -126,7 +125,7 @@ def splitter_bck(conf):
 
     s3 = boto.connect_s3()
     mybucket = s3.get_bucket(conf['general']['bucketName'])
-    key = mybucket.get_key(path.join(conf['split']['split'], conf['split']['name'] + '_$folder$'))
+    key = mybucket.get_key(os.path.join(conf['split']['split'], conf['split']['name'] + '_$folder$'))
     if key and not conf['split']['forceSplitCreation']:
         print 'Split already done'
         return None
@@ -247,12 +246,12 @@ def splitter(conf):
 
         readDataset2.filter(lambda x: len(x[1]['linkedinfo']['objects']) >= minEventPerSessionTraining) \
             .join(trainUsersRDD).map(lambda x: json.dumps(x[1][0])) \
-            .saveAsTextFile(path.join(pathOUT, "train/batchTraining/"))
+            .saveAsTextFile(os.path.join(pathOUT, "train/batchTraining/"))
         testRDD = readDataset2.filter(lambda x: len(x[1]['linkedinfo']['objects']) >= minEventPerSessionTest) \
             .join(testUsersRDD).map(lambda x: (long(x[1][0]['ts']), x[1][0]))
 
         testRDD.filter(lambda x: long(x[0]) <= TS).map(lambda x: json.dumps(x[1])) \
-            .saveAsTextFile(path.join(pathOUT + "test/batchTraining/"))
+            .saveAsTextFile(os.path.join(pathOUT + "test/batchTraining/"))
 
         if mode == 'session':
             recAndGt = testRDD.filter(lambda x: long(x[0]) > TS) \
@@ -265,9 +264,9 @@ def splitter(conf):
                                                       GT=1000000, tr=onlineTrainingLength))
 
         recAndGt.filter(lambda x: x['type'] == 'request').map(lambda x: json.dumps(x)) \
-            .saveAsTextFile(path.join(pathOUT, "test/onlineTraining/"))
+            .saveAsTextFile(os.path.join(pathOUT, "test/onlineTraining/"))
         recAndGt.filter(lambda x: x['type'] != 'request').map(lambda x: json.dumps(x)) \
-            .saveAsTextFile(path.join(pathOUT + "GT/"))
+            .saveAsTextFile(os.path.join(pathOUT + "GT/"))
 
     if mode == 'ts-1' or mode == 'ts-multi':
         splitTestTrain = readDataset2.map(lambda x: (x[1]['ts'], x[1])).persist()
@@ -281,6 +280,6 @@ def splitter(conf):
                 .union(test.map(lambda x: (x[1]['linkedinfo']['subjects'][0]['id'], x)) \
                        .reduceByKey(lambda x, y: x).map(lambda x: gt1Creator(x[1][1], prop, mode='req', TS=TS)))
         recAndGt.filter(lambda x: x['type'] == 'request').map(lambda x: json.dumps(x)).repartition(16) \
-            .saveAsTextFile(path.join(pathOUT + "test/request/"))
+            .saveAsTextFile(os.path.join(pathOUT + "test/request/"))
         recAndGt.filter(lambda x: x['type'] != 'request').map(lambda x: json.dumps(x)).repartition(16) \
-            .saveAsTextFile(path.join(pathOUT + "GT/"))
+            .saveAsTextFile(os.path.join(pathOUT + "GT/"))
