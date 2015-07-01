@@ -12,8 +12,8 @@ from os import path
 
 for excludeAlreadyListenedTest in [True, False]:
 
-    # for onlinetr_len in [1, 2, 5, 10]:
-    for onlinetr_len in [1]:
+    for onlinetr_len in [1, 2, 5, 10]:
+    # for onlinetr_len in [1]:
 
         conf = {}
 
@@ -25,19 +25,19 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['split']['prop'] = {}
 
         conf['split']['minEventsPerUser'] = 5
-        conf['split'][
-            'inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval1total_1413851857/'
-        # conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions'
+        # conf['split'][
+        #     'inputData'] = 's3n://contentwise-research-poli/split22.split/SenzaRipetizioni_nuovoEval1total_1413851857/'
+        conf['split']['inputData'] = 's3n://contentwise-research-poli/30Mdataset/relations/sessions'
         conf['split']['bucketName'] = 'contentwise-research-poli'
-        # conf['split']['location'] = '30Mdataset/relations/sessions'
-        conf['split']['location'] = 'split22.split/SenzaRipetizioni_nuovoEval1total_1413851857'
+        conf['split']['location'] = '30Mdataset/relations/sessions'
+        # conf['split']['location'] = 'split22.split/SenzaRipetizioni_nuovoEval1total_1413851857'
         conf['split']['percUsTr'] = 0
         conf['split']['ts'] = int(0.75 * (1421745857 - 1390209860) + 1390209860) - 10000
         conf['split']['minEventPerSession'] = 5
         conf['split']['onlineTrainingLength'] = onlinetr_len
         conf['split']['GTlength'] = 5
-        # conf['split']['name'] = 'split_complete_ts_1413851857_repetitions_%d_plen_%d' % (not excludeAlreadyListenedTest, onlinetr_len)
-        conf['split']['name'] = 'SenzaRipetizioni_nuovoEval1total_1413851857'
+        conf['split']['name'] = 'split_complete_ts_1413851857_repetitions_%d_plen_%d' % (not excludeAlreadyListenedTest, onlinetr_len)
+        # conf['split']['name'] = 'SenzaRipetizioni_nuovoEval1total_1413851857'
         conf['split']['minEventPerSessionTraining'] = 10
         conf['split']['minEventPerSessionTest'] = 11
         conf['split']['mode'] = 'total'
@@ -52,15 +52,15 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['evaluation']['name'] = 'recall@N'
 
         conf['general'] = {}
-        conf['general']['clientname'] = "split22.split"
-        # conf['general']['clientname'] = "complete.split"
+        # conf['general']['clientname'] = "split22.split"
+        conf['general']['clientname'] = "complete.split"
         conf['general']['bucketName'] = 'contentwise-research-poli'
         conf['general']['tracksPath'] = '30Mdataset/entities/tracks.idomaar.gz'
 
-        # conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s/' % (
-        # conf['general']['clientname'], conf['split']['name'])
         conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s/' % (
-            conf['general']['clientname'], conf['split']['name'])
+        conf['general']['clientname'], conf['split']['name'])
+        # conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s/' % (
+        #    conf['general']['clientname'], conf['split']['name'])
 
         sc = SparkContext(appName="Music")
 
