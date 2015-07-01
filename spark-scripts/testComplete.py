@@ -12,8 +12,8 @@ from os import path
 
 for excludeAlreadyListenedTest in [True, False]:
 
+    # for onlinetr_len in [1, 2, 5, 10]:
     for onlinetr_len in [1]:
-        # for gtlen in [5]:
 
         conf = {}
 
@@ -34,7 +34,7 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['split']['minEventPerSession'] = 5
         conf['split']['onlineTrainingLength'] = onlinetr_len
         conf['split']['GTlength'] = 5
-        conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_gt_' + str(onlinetr_len)
+        conf['split']['name'] = 'split_complete_ts_1413851857_no_repetitions_plen_' + str(onlinetr_len)
         # conf['split']['name'] = 'SenzaRipetizioni_nuovoEval5total_1413851857'
         conf['split']['minEventPerSessionTraining'] = 10
         conf['split']['minEventPerSessionTest'] = 11
@@ -55,7 +55,7 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['general']['bucketName'] = 'contentwise-research-poli'
         conf['general']['tracksPath'] = '30Mdataset/entities/tracks.idomaar.gz'
 
-        conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s' % (
+        conf['split']['out'] = 's3n://contentwise-research-poli/%s/%s/' % (
         conf['general']['clientname'], conf['split']['name'])
 
         sc = SparkContext(appName="Music")
