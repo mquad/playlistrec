@@ -9,6 +9,7 @@ import boto
 import os
 from pyspark import StorageLevel
 from conventions import *
+from utils import *
 
 def testTrainUserSplit(x, percUsTr):
     if percUsTr * 100 <= np.random.randint(0, 100): return (x, 1)
@@ -203,6 +204,18 @@ def splitter_bck(conf):
 
 
 def splitter(conf):
+    # check for already existing splits
+    s3 = boto.connect_s3()
+    mybucket = s3.get_bucket(conf['general']['bucketName'])
+    split_path = os.path.join(conf['split']['split'], conf['split']['name'])
+    key = mybucket.get_key(split_path + '_$folder$')
+    if key:
+        if not conf['split']['forceSplitCreation']:
+            print 'Split already done'
+            return None
+        else:
+            s3_delete_recursive(mybucket, split_path)
+
     prop = conf[SPLIT][PROP]
     pathOUT = conf[SPLIT][OUT]
 
