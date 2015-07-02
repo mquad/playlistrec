@@ -113,6 +113,8 @@ def computeMetrics(conf):
             temp['properties']['name'] = conf['evaluation']['name'] + "@" + str(k)
             temp['evaluation'] = {}
             temp['evaluation']['N'] = n
+            print hitRDD.take(1)
+            return
             temp['evaluation']['value'] = hitRDD.filter(lambda x: x[1] < n and x[3] <= k).map(
                 lambda x: x[2]).sum() / totRec
             temp['linkedinfo'] = {}
