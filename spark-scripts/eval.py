@@ -102,6 +102,7 @@ def computeMetrics(conf):
                              range(len(x['linkedinfo']['objects']))]))
         print recommendationRDD.take(1)
         print groundTruthRDD.take(1)
+        print recommendationRDD.join(groundTruthRDD).take(1)
 
         hitRDDPart = recommendationRDD.join(groundTruthRDD).filter(lambda x: x[1][0][0] == x[1][1][0])
         print hitRDDPart.take(1)
