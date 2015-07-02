@@ -97,10 +97,7 @@ for excludeAlreadyListenedTest in [True, False]:
                                            (sessionJaccardShrinkage, clusterSim, expDecay)
 
                     recJsonRDD = executeImplicitPlaylistAlgo(playlists, test, conf)
-                    try:
-                        saveRecommendations(conf, recJsonRDD, overwrite=True)
-                        computeMetrics(conf)
-                    except:
-                        pass
+                    saveRecommendations(conf, recJsonRDD, overwrite=False)
+                    computeMetrics(conf)
 
         sc.stop()
