@@ -62,5 +62,6 @@ def saveRecommendations(conf, recJsonRdd, overwrite=False):
         s3_delete_recursive(mybucket, base_path)
     # save recommendations to S3 storage
     outfile = path.join('s3n://', conf['general']['bucketName'], base_path, "recommendations")
-    recJsonRdd.repartition(10).saveAsTextFile(outfile)
+    # recJsonRdd.repartition(10).saveAsTextFile(outfile)
+    recJsonRdd.saveAsTextFile(outfile)
     print "Recommendations successfully written to %s" % outfile
