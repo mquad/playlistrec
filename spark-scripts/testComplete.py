@@ -4,6 +4,14 @@ execfile('../spark-scripts/conventions.py')
 execfile('../spark-scripts/split.py')
 execfile('../spark-scripts/utils.py')
 execfile('../spark-scripts/eval.py')
+execfile('../spark-scripts/CAGHFunctions.py')
+execfile('../spark-scripts/CAGHMain.py')
+execfile('../spark-scripts/SAGHFunctions.py')
+execfile('../spark-scripts/SAGHMain.py')
+execfile('../spark-scripts/implicitPlaylistAlgoFunctions.py')
+execfile('../spark-scripts/implicitPlaylistAlgoFallBackMain.py')
+execfile('../spark-scripts/implicitPlaylistAlgoMain.py')
+
 
 import json
 import copy
@@ -12,7 +20,7 @@ from os import path
 
 for excludeAlreadyListenedTest in [True, False]:
 
-    for onlinetr_len in [1, 2, 5, 10]:
+    for onlinetr_len in [1, 2, 5, 10, 20]:
     # for onlinetr_len in [1]:
 
         conf = {}
@@ -71,18 +79,12 @@ for excludeAlreadyListenedTest in [True, False]:
         test.cache()
 
         ####CAGH
-        execfile('../spark-scripts/CAGHFunctions.py')
-        execfile('../spark-scripts/CAGHMain.py')
-
         artistLookupRDD = loadArtistLookup(conf)
         artistLookupRDD.cache()
 
         conf['algo'] = {}
         conf['algo']['name'] = 'CAGH'
         conf['algo']['props'] = {}
-        # conf['algo']['props']['numGH'] = 10
-        # conf['algo']['props']['minAASim'] = 0.5
-        # conf['algo']['props']['skipTh'] = 0
 
         numGHList = [50]
         minAASimList = [0.4]
@@ -93,35 +95,36 @@ for excludeAlreadyListenedTest in [True, False]:
             # (track_id, session_id)
             batchTrainingRDD = (train
                                 .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] > th)
-                                .map(lambda x: (int(x[0]), int(x[2])))
-                                .cache())
+                                .map(lambda x: (int(x[0]), int(x[2]))))
+            recReqRDD = parseRequests(artistLookupRDD, test, th, conf)
+            artistArtistSim = computeArtistArtistSimMat(artistLookupRDD, batchTrainingRDD)
 
-            recReqRDD = parseRequests(artistLookupRDD, test, th, conf).cache()
+            if len(numGHList) > 1:
+                batchTrainingRDD.cache()
+                recReqRDD.cache()
+                artistArtistSim.cache()
 
-            artistArtistSim = computeArtistArtistSimMat(artistLookupRDD, batchTrainingRDD).cache()
             for numGH in numGHList:
                 conf['algo']['props']['numGH'] = numGH
-                artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, conf).cache()
+                artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, conf)
+                if len(minAASimList) > 1:
+                    artistGreatistHitsRDD.cache()
+
                 for minAASim in minAASimList:
                     conf['algo']['props']['minAASim'] = minAASim
                     recJsonRdd = generateRecommendationsCAGH(artistArtistSim, artistGreatistHitsRDD, recReqRDD, test,
                                                              conf)
                     try:
-                        saveRecommendations(conf, recJsonRdd, overwrite=True)
+                        saveRecommendations(conf, recJsonRdd, overwrite=False)
                         computeMetrics(conf)
-                    except:
-                        pass
+                    except Exception as e:
+                        print e.message
 
 
         ####SAGH
-        execfile('../spark-scripts/SAGHFunctions.py')
-        execfile('../spark-scripts/SAGHMain.py')
-
         conf['algo'] = {}
         conf['algo']['name'] = 'SAGH'
         conf['algo']['props'] = {}
-        # conf['algo']['props']['numGH'] = 100
-        # conf['algo']['props']['skipTh'] = 0
 
         numGHList = [100]
         skipThList = [0]
@@ -130,23 +133,25 @@ for excludeAlreadyListenedTest in [True, False]:
             conf['algo']['props']['skipTh'] = th
             batchTrainingRDD = (train
                                 .flatMap(lambda x: ext(json.loads(x))).filter(lambda x: x[1] > th)
-                                .map(lambda x: (int(x[0]), int(x[2])))
-                                .cache())
-            recReqRDD = parseRequests(artistLookupRDD, test, th, conf).cache()
+                                .map(lambda x: (int(x[0]), int(x[2]))))
+            recReqRDD = parseRequests(artistLookupRDD, test, th, conf)
+
+            if len(numGHList) > 1:
+                batchTrainingRDD.cache()
+                recReqRDD.cache()
 
             for numGH in numGHList:
                 conf['algo']['props']['numGH'] = numGH
                 recJsonRdd = generateRecommendationsSAGH(batchTrainingRDD, recReqRDD, artistLookupRDD, test, numGH,
                                                          conf)
-                saveRecommendations(conf, recJsonRdd, overwrite=True)
-                computeMetrics(conf)
+                try:
+                    saveRecommendations(conf, recJsonRdd, overwrite=False)
+                    computeMetrics(conf)
+                except Exception as e:
+                    print e.message
 
 
         ####Implicit
-        execfile('../spark-scripts/implicitPlaylistAlgoFunctions.py')
-        execfile('../spark-scripts/implicitPlaylistAlgoFallBackMain.py')
-        execfile('../spark-scripts/implicitPlaylistAlgoMain.py')
-
         conf['algo'] = {}
         conf['algo']['name'] = 'ImplicitPlaylist'
         conf['algo']['props'] = {}
@@ -161,7 +166,9 @@ for excludeAlreadyListenedTest in [True, False]:
             for clusterSim in clusterSimList:
                 conf['algo']['props']["clusterSimilarityThreshold"] = clusterSim
 
-                playlists = extractImplicitPlaylists(train, conf).cache()
+                playlists = extractImplicitPlaylists(train, conf)
+                if len(expDecayList) > 1:
+                    playlists.cache()
 
                 for expDecay in expDecayList:
                     conf['algo']['props']["expDecayFactor"] = expDecay
@@ -170,9 +177,9 @@ for excludeAlreadyListenedTest in [True, False]:
 
                     recJsonRDD = executeImplicitPlaylistAlgo(playlists, test, conf)
                     try:
-                        saveRecommendations(conf, recJsonRDD, overwrite=True)
+                        saveRecommendations(conf, recJsonRDD, overwrite=False)
                         computeMetrics(conf)
-                    except:
-                        pass
+                    except Exception as e:
+                        print e.message
 
         sc.stop()

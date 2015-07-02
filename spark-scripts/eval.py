@@ -100,13 +100,8 @@ def computeMetrics_new(conf):
             .map(lambda x: ([(x['linkedinfo']['gt'][0]['id'],
                               (x['linkedinfo']['objects'][k]['id'], k)) for k in
                              range(len(x['linkedinfo']['objects']))]))
-        print recommendationRDD.take(1)
-        print groundTruthRDD.take(1)
-        print recommendationRDD.join(groundTruthRDD).take(1)
 
         hitRDDPart = recommendationRDD.join(groundTruthRDD).filter(lambda x: x[1][0][0] == x[1][1][0])
-        print hitRDDPart.take(1)
-
         hitRDD = hitRDDPart.map(lambda x: (x[0], x[1][0][1], 1.0, x[1][1][1])).persist(StorageLevel.MEMORY_AND_DISK)
         totRec = float(groundTruthRDD.count())
         ## recall@N
