@@ -84,12 +84,6 @@ for excludeAlreadyListenedTest in [True, False]:
         # conf['algo']['props']['minAASim'] = 0.5
         # conf['algo']['props']['skipTh'] = 0
 
-
-
-
-        basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
-        splitPath = path.join(basePath, conf['split']['name'])
-
         numGHList = [50]
         minAASimList = [0.4]
         skipThList = [0]
@@ -129,10 +123,6 @@ for excludeAlreadyListenedTest in [True, False]:
         # conf['algo']['props']['numGH'] = 100
         # conf['algo']['props']['skipTh'] = 0
 
-
-        basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
-        splitPath = path.join(basePath, conf['split']['name'])
-
         numGHList = [100]
         skipThList = [0]
 
@@ -160,9 +150,6 @@ for excludeAlreadyListenedTest in [True, False]:
         conf['algo'] = {}
         conf['algo']['name'] = 'ImplicitPlaylist'
         conf['algo']['props'] = {}
-
-        basePath = path.join("s3n://", conf['general']['bucketName'], conf['general']['clientname'])
-        splitPath = path.join(basePath, conf['split']['name'])
 
         clusterSimList = [0.1]
         sessionJaccardShrinkageList = [5]
