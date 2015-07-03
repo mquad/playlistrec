@@ -18,7 +18,7 @@ import copy
 from pyspark import SparkContext
 from os import path
 
-for excludeAlreadyListenedTest in [True, False]:
+for excludeAlreadyListenedTest in [False]:
 
     for onlinetr_len in [1, 2, 5, 10, 20]:
     # for onlinetr_len in [1]:
@@ -75,12 +75,12 @@ for excludeAlreadyListenedTest in [True, False]:
         splitter(conf)
 
         train, test = loadDataset(conf)
-        train.cache()
-        test.cache()
+        train.persist(MEMORY_AND_DISK)
+        test.persist(MEMORY_AND_DISK)
 
         ####CAGH
         artistLookupRDD = loadArtistLookup(conf)
-        artistLookupRDD.cache()
+        artistLookupRDD.persist(MEMORY_AND_DISK)
 
         conf['algo'] = {}
         conf['algo']['name'] = 'CAGH'
@@ -100,15 +100,15 @@ for excludeAlreadyListenedTest in [True, False]:
             artistArtistSim = computeArtistArtistSimMat(artistLookupRDD, batchTrainingRDD)
 
             if len(numGHList) > 1:
-                batchTrainingRDD.cache()
-                recReqRDD.cache()
-                artistArtistSim.cache()
+                batchTrainingRDD.persist(MEMORY_AND_DISK)
+                recReqRDD.persist(MEMORY_AND_DISK)
+                artistArtistSim.persist(MEMORY_AND_DISK)
 
             for numGH in numGHList:
                 conf['algo']['props']['numGH'] = numGH
                 artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, conf)
                 if len(minAASimList) > 1:
-                    artistGreatistHitsRDD.cache()
+                    artistGreatistHitsRDD.persist(MEMORY_AND_DISK)
 
                 for minAASim in minAASimList:
                     conf['algo']['props']['minAASim'] = minAASim
@@ -137,8 +137,8 @@ for excludeAlreadyListenedTest in [True, False]:
             recReqRDD = parseRequests(artistLookupRDD, test, th, conf)
 
             if len(numGHList) > 1:
-                batchTrainingRDD.cache()
-                recReqRDD.cache()
+                batchTrainingRDD.persist(MEMORY_AND_DISK)
+                recReqRDD.persist(MEMORY_AND_DISK)
 
             for numGH in numGHList:
                 conf['algo']['props']['numGH'] = numGH
@@ -168,7 +168,7 @@ for excludeAlreadyListenedTest in [True, False]:
 
                 playlists = extractImplicitPlaylists(train, conf)
                 if len(expDecayList) > 1:
-                    playlists.cache()
+                    playlists.persist(MEMORY_AND_DISK)
 
                 for expDecay in expDecayList:
                     conf['algo']['props']["expDecayFactor"] = expDecay
