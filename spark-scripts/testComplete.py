@@ -15,7 +15,7 @@ execfile('../spark-scripts/implicitPlaylistAlgoMain.py')
 
 import json
 import copy
-from pyspark import SparkContext
+from pyspark import SparkContext, StorageLevel
 from os import path
 
 for excludeAlreadyListenedTest in [False]:
@@ -75,12 +75,12 @@ for excludeAlreadyListenedTest in [False]:
         splitter(conf)
 
         train, test = loadDataset(conf)
-        train.persist(MEMORY_AND_DISK)
-        test.persist(MEMORY_AND_DISK)
+        train.persist(StorageLevel.MEMORY_AND_DISK)
+        test.persist(StorageLevel.MEMORY_AND_DISK)
 
         ####CAGH
         artistLookupRDD = loadArtistLookup(conf)
-        artistLookupRDD.persist(MEMORY_AND_DISK)
+        artistLookupRDD.persist(StorageLevel.MEMORY_AND_DISK)
 
         conf['algo'] = {}
         conf['algo']['name'] = 'CAGH'
@@ -100,15 +100,15 @@ for excludeAlreadyListenedTest in [False]:
             artistArtistSim = computeArtistArtistSimMat(artistLookupRDD, batchTrainingRDD)
 
             if len(numGHList) > 1:
-                batchTrainingRDD.persist(MEMORY_AND_DISK)
-                recReqRDD.persist(MEMORY_AND_DISK)
-                artistArtistSim.persist(MEMORY_AND_DISK)
+                batchTrainingRDD.persist(StorageLevel.MEMORY_AND_DISK)
+                recReqRDD.persist(StorageLevel.MEMORY_AND_DISK)
+                artistArtistSim.persist(StorageLevel.MEMORY_AND_DISK)
 
             for numGH in numGHList:
                 conf['algo']['props']['numGH'] = numGH
                 artistGreatistHitsRDD = extractArtistGreatestHits(artistLookupRDD, batchTrainingRDD, conf)
                 if len(minAASimList) > 1:
-                    artistGreatistHitsRDD.persist(MEMORY_AND_DISK)
+                    artistGreatistHitsRDD.persist(StorageLevel.MEMORY_AND_DISK)
 
                 for minAASim in minAASimList:
                     conf['algo']['props']['minAASim'] = minAASim
@@ -137,8 +137,8 @@ for excludeAlreadyListenedTest in [False]:
             recReqRDD = parseRequests(artistLookupRDD, test, th, conf)
 
             if len(numGHList) > 1:
-                batchTrainingRDD.persist(MEMORY_AND_DISK)
-                recReqRDD.persist(MEMORY_AND_DISK)
+                batchTrainingRDD.persist(StorageLevel.MEMORY_AND_DISK)
+                recReqRDD.persist(StorageLevel.MEMORY_AND_DISK)
 
             for numGH in numGHList:
                 conf['algo']['props']['numGH'] = numGH
@@ -168,7 +168,7 @@ for excludeAlreadyListenedTest in [False]:
 
                 playlists = extractImplicitPlaylists(train, conf)
                 if len(expDecayList) > 1:
-                    playlists.persist(MEMORY_AND_DISK)
+                    playlists.persist(StorageLevel.MEMORY_AND_DISK)
 
                 for expDecay in expDecayList:
                     conf['algo']['props']["expDecayFactor"] = expDecay
