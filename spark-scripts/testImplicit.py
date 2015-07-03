@@ -12,7 +12,7 @@ from os import path
 
 for excludeAlreadyListenedTest in [True, False]:
 
-    for onlinetr_len in [1, 2, 5, 10]:
+    for onlinetr_len in [20]:
     # for onlinetr_len in [1]:
 
         conf = {}
