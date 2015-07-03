@@ -4,6 +4,9 @@ execfile('../spark-scripts/conventions.py')
 execfile('../spark-scripts/split.py')
 execfile('../spark-scripts/utils.py')
 execfile('../spark-scripts/eval.py')
+execfile('../spark-scripts/implicitPlaylistAlgoFunctions.py')
+execfile('../spark-scripts/implicitPlaylistAlgoFallBackMain.py')
+execfile('../spark-scripts/implicitPlaylistAlgoMain.py')
 
 import json
 import copy
@@ -71,10 +74,6 @@ for excludeAlreadyListenedTest in [True, False]:
         test.cache()
 
         ####Implicit
-        execfile('../spark-scripts/implicitPlaylistAlgoFunctions.py')
-        execfile('../spark-scripts/implicitPlaylistAlgoFallBackMain.py')
-        execfile('../spark-scripts/implicitPlaylistAlgoMain.py')
-
         conf['algo'] = {}
         conf['algo']['name'] = 'ImplicitPlaylist'
         conf['algo']['props'] = {}
@@ -89,7 +88,9 @@ for excludeAlreadyListenedTest in [True, False]:
             for clusterSim in clusterSimList:
                 conf['algo']['props']["clusterSimilarityThreshold"] = clusterSim
 
-                playlists = extractImplicitPlaylists(train, conf).cache()
+                playlists = extractImplicitPlaylists(train, conf)
+                if len(expDecayList) > 1:
+                    playlists.persist(StorageLevel.MEMORY_AND_DISK)
 
                 for expDecay in expDecayList:
                     conf['algo']['props']["expDecayFactor"] = expDecay
@@ -97,7 +98,10 @@ for excludeAlreadyListenedTest in [True, False]:
                                            (sessionJaccardShrinkage, clusterSim, expDecay)
 
                     recJsonRDD = executeImplicitPlaylistAlgo(playlists, test, conf)
-                    saveRecommendations(conf, recJsonRDD, overwrite=False)
-                    computeMetrics(conf)
+                    try:
+                        saveRecommendations(conf, recJsonRDD, overwrite=False)
+                        computeMetrics(conf)
+                    except Exception as e:
+                        print e.message
 
         sc.stop()
